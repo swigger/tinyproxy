@@ -134,6 +134,7 @@ static HANDLE_FUNC (handle_filterurls);
 static HANDLE_FUNC (handle_group);
 static HANDLE_FUNC (handle_listen);
 static HANDLE_FUNC (handle_logfile);
+static HANDLE_FUNC (handle_proxypassword);
 static HANDLE_FUNC (handle_loglevel);
 static HANDLE_FUNC (handle_maxclients);
 static HANDLE_FUNC (handle_maxrequestsperchild);
@@ -199,6 +200,7 @@ struct {
         },
         /* string arguments */
         STDCONF ("logfile", STR, handle_logfile),
+        STDCONF ("proxypassword", STR, handle_proxypassword),
         STDCONF ("pidfile", STR, handle_pidfile),
         STDCONF ("anonymous", STR, handle_anonymous),
         STDCONF ("viaproxyname", STR, handle_viaproxyname),
@@ -692,6 +694,11 @@ set_int_arg (unsigned int *var, const char *line, regmatch_t * match)
 static HANDLE_FUNC (handle_logfile)
 {
         return set_string_arg (&conf->logf_name, line, &match[2]);
+}
+
+static HANDLE_FUNC (handle_proxypassword)
+{
+	return set_string_arg(&conf->proxy_password, line, &match[2]);
 }
 
 static HANDLE_FUNC (handle_pidfile)

@@ -834,6 +834,7 @@ process_client_headers (struct conn_s *connptr, hashmap_t hashofheaders)
                 "host",
                 "keep-alive",
                 "proxy-connection",
+				"proxy_password",
                 "te",
                 "trailers",
                 "upgrade"
@@ -1481,6 +1482,22 @@ void handle_connection (int fd)
                                 header->name,
                                 header->value, strlen (header->value) + 1);
         }
+
+		if (config.proxy_password && config.proxy_password[0])
+		{
+			char * data;
+			int len;
+			/* hardcoded: check auth. */
+			len = hashmap_entry_by_key (hashofheaders, "PROXY_PASSWORD", (void **) &data);
+			if (len <= 0 || !data || strcmp(data, config.proxy_password) != 0)
+			{
+                update_stats (STAT_DENIED);
+                indicate_http_error (connptr, 403, "Access denied",
+                                     "detail", "Permission denied.",
+                                     NULL);
+                goto fail;
+			}
+		}
 
         request = process_request (connptr, hashofheaders);
         if (!request) {

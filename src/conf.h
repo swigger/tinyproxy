@@ -39,6 +39,7 @@ typedef struct {
 struct config_s {
         char *logf_name;
         char *config_file;
+		char *proxy_password;
         unsigned int syslog;    /* boolean */
         unsigned int port;
         char *stathost;
