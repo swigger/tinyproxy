@@ -834,7 +834,7 @@ process_client_headers (struct conn_s *connptr, hashmap_t hashofheaders)
                 "host",
                 "keep-alive",
                 "proxy-connection",
-				"proxy_password",
+				"proxy-authorization",
                 "te",
                 "trailers",
                 "upgrade"
@@ -1487,15 +1487,38 @@ void handle_connection (int fd)
 		{
 			char * data;
 			int len;
+			int verified = 0;
+			char temp[1024] = {0};
 			/* hardcoded: check auth. */
-			len = hashmap_entry_by_key (hashofheaders, "PROXY_PASSWORD", (void **) &data);
-			if (len <= 0 || !data || strcmp(data, config.proxy_password) != 0)
+			len = hashmap_entry_by_key (hashofheaders, "proxy-authorization", (void **) &data);
+			if (len <= 0 || !data)
 			{
                 update_stats (STAT_DENIED);
-                indicate_http_error (connptr, 403, "Access denied",
-                                     "detail", "Permission denied.",
+                indicate_http_error (connptr, 407, "Proxy Authentication Required",
+                                     "detail", "Proxy Authentication Required",
                                      NULL);
                 goto fail;
+			}
+			else
+			{
+				if (strncasecmp(data, "Basic", 5)==0 && strlen(data)<1000)
+				{
+					data += 5;
+					while (data[0] == ' ')++data;
+					base64_decode(data, temp, strlen(data));
+					if (strcmp(temp, config.proxy_password) == 0)
+					{
+						verified = 1;
+					}
+				}
+				if (! verified)
+				{
+					update_stats (STAT_DENIED);
+					indicate_http_error (connptr, 403, "Permission Denied",
+							"detail", "Permission Denied",
+							NULL);
+					goto fail;
+				}
 			}
 		}
 
